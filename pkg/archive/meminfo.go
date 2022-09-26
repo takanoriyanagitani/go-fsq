@@ -1,6 +1,7 @@
 package aq
 
 import (
+	"bytes"
 	"io/fs"
 	"time"
 )
@@ -42,6 +43,14 @@ func (m MemInfoBuilder) Build(name string, size int64) MemInfo {
 		mode: m.mode,
 		date: m.tgen(),
 	}
+}
+
+func (m MemInfoBuilder) NewFile(name string, data []byte) MemFile {
+	var mi MemInfo = m.Build(name, int64(len(data)))
+	return MemFileNew(
+		mi,
+		bytes.NewReader(data),
+	)
 }
 
 type TimeProvider func() time.Time

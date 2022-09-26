@@ -10,6 +10,13 @@ type MemFile struct {
 	data *bytes.Reader
 }
 
+func MemFileNew(info fs.FileInfo, data *bytes.Reader) MemFile {
+	return MemFile{
+		info,
+		data,
+	}
+}
+
 func (m MemFile) Stat() (fs.FileInfo, error) { return m.info, nil }
 func (m MemFile) Read(b []byte) (int, error) { return m.data.Read(b) }
 func (m MemFile) Close() error               { return nil } // Nothing to close

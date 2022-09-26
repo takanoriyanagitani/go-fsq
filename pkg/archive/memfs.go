@@ -3,6 +3,7 @@ package aq
 import (
 	"fmt"
 	"io/fs"
+	"path"
 
 	fq "github.com/takanoriyanagitani/go-fsq"
 )
@@ -59,6 +60,12 @@ func (m MemFs) Open(unchecked string) (fs.File, error) {
 	)(unchecked)
 }
 
-//func (m MemFs) Upsert(nocheck string, f fs.File) {
-//	m.m[nocheck] = f
-//}
+func (m MemFs) upsert(nocheck string, mf MemFile) {
+	m.m[nocheck] = mf
+}
+
+func (m MemFs) Upsert(b MemInfoBuilder, nocheck string, data []byte) {
+	var basename string = path.Base(nocheck)
+	var mf MemFile = b.NewFile(basename, data)
+	m.upsert(nocheck, mf)
+}

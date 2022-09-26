@@ -12,10 +12,6 @@ import (
 
 type PushMany func(ctx context.Context, w io.Writer, items fq.Iter[fq.Item]) error
 
-type NameChecker func(unchecked string) (checked string)
-
-var NameCheckerNoCheck NameChecker = fq.Identity[string]
-
 type PushmanyBuilder func(NameChecker) fq.PushMany
 
 type PushmanyFactory struct {
