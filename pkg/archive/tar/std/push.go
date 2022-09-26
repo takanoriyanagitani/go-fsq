@@ -31,13 +31,6 @@ func (p PushMany) ToPushManyDefault() (fq.PushMany, error) {
 	return p.ToPushMany(aq.PushmanyFactory{}.Default())
 }
 
-func (p PushMany) NewBuilder(tb aq.TempnameBuilder) aq.PushmanyBuilder {
-	return fq.Compose(
-		func(pm PushMany) aq.PushMany { return pm.Build() },
-		aq.PushmanyBuilderNew(tb),
-	)(p)
-}
-
 type item2tar func(t *tar.Writer) func(fq.Item) error
 
 func (t item2tar) pushMany(ctx context.Context, tw *tar.Writer, items fq.Iter[fq.Item]) error {
@@ -57,13 +50,6 @@ func (i item) toWriter(w *tar.Writer) (int, error) {
 		func(hdr *tar.Header) ([]byte, error) { return i.raw, w.WriteHeader(hdr) },
 		w.Write,
 	)(i.hdr)
-}
-
-func writeItemBuilder(tw *tar.Writer, i fq.Item) func(*tar.Header) (int, error) {
-	return fq.ComposeErr(
-		func(hdr *tar.Header) ([]byte, error) { return i.Raw(), tw.WriteHeader(hdr) },
-		tw.Write,
-	)
 }
 
 func item2tarBuilderNew(gen headerGen) item2tar {

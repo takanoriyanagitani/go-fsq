@@ -48,6 +48,65 @@ func TestPush(t *testing.T) {
 						_, e = tr.Next()
 						t.Run("Must be eof", check(e == io.EOF, true))
 					})
+
+					t.Run("single empty queue", func(t *testing.T) {
+						t.Parallel()
+
+						var buf bytes.Buffer
+
+						e := am(context.Background(), &buf, fq.IterFromArr([]fq.Item{
+							fq.ItemNew(nil),
+						}))
+						t.Run("Must not fail(empty)", check(nil == e, true))
+
+						var rdr *bytes.Reader = bytes.NewReader(buf.Bytes())
+
+						var tr *tar.Reader = tar.NewReader(rdr)
+
+						th, e := tr.Next()
+						t.Run("Must not fail(Next)", check(nil == e, true))
+
+						t.Run("Must be empty(size)", check(0, th.Size))
+
+						ba, e := io.ReadAll(tr)
+						t.Run("Must not fail(ReadAll)", check(nil == e, true))
+
+						t.Run("Must be empty(bytes)", check(0, len(ba)))
+					})
+
+					t.Run("many non-empty queues", func(t *testing.T) {
+						t.Parallel()
+
+						var buf bytes.Buffer
+
+						e := am(context.Background(), &buf, fq.IterFromArr([]fq.Item{
+							fq.ItemNew([]byte("hw")),
+							fq.ItemNew([]byte("hh")),
+						}))
+						t.Run("Must not fail(non empty)", check(nil == e, true))
+
+						var rdr *bytes.Reader = bytes.NewReader(buf.Bytes())
+
+						var tr *tar.Reader = tar.NewReader(rdr)
+
+						chk := func(expected []byte) func(*testing.T) {
+							return func(t *testing.T) {
+								th, e := tr.Next()
+								t.Run("Must not fail(Next)", check(nil == e, true))
+
+								t.Run("size check", check(th.Size, int64(len(expected))))
+
+								ba, e := io.ReadAll(tr)
+								t.Run("Must not fail(ReadAll)", check(nil == e, true))
+
+								t.Run("Must be same", checkBytes(ba, expected))
+							}
+						}
+
+						t.Run("item 1", chk([]byte("hw")))
+						t.Run("item 2", chk([]byte("hh")))
+
+					})
 				})
 			}
 		}(PushmanyUuidV4Default))

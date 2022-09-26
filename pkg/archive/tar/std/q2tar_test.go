@@ -1,6 +1,7 @@
 package tarq
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -20,3 +21,7 @@ func checkBuilder[T any](comp func(a, b T) (same bool)) func(got, expected T) fu
 func check[T comparable](got, expected T) func(*testing.T) {
 	return checkBuilder(func(a, b T) (same bool) { return a == b })(got, expected)
 }
+
+var checkBytes func(got, expected []byte) func(*testing.T) = checkBuilder(
+	func(a, b []byte) (same bool) { return 0 == bytes.Compare(a, b) },
+)

@@ -26,5 +26,3 @@ func (h headerGen) toItem2tar() item2tar { return item2tarBuilderNew(h) }
 func (h headerGen) toPushMany() PushMany { return h.toItem2tar().toPushMany() }
 
 type headerGenBuilder func(mode int64) headerGen
-
-func (b headerGenBuilder) toDefault() headerGen { return b(FilemodeDefault) }

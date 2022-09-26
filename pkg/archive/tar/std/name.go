@@ -42,10 +42,8 @@ func (g NameGen) toHeaderGenBuilder() headerGenBuilder {
 }
 
 func (g NameGen) toHeaderGen(mode int64) headerGen { return g.toHeaderGenBuilder()(mode) }
-func (g NameGen) toHeaderGenDefault() headerGen    { return g.toHeaderGenBuilder().toDefault() }
 
 func (g NameGen) toPushMany(mode int64) PushMany { return g.toHeaderGen(mode).toPushMany() }
-func (g NameGen) toPushManyDefault() PushMany    { return g.toHeaderGenDefault().toPushMany() }
 
 type namedItemGen func(fq.Item) (namedItem, error)
 
