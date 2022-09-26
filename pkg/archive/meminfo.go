@@ -21,10 +21,9 @@ type MemInfoBuilder struct {
 	tgen TimeProvider
 }
 
-var MemInfoBuilderDefault MemInfoBuilder = MemInfoBuilder{
-	mode: MemFilemodeDefault,
-	tgen: TimeProviderUnixEpoch,
-}
+var MemInfoBuilderDefault MemInfoBuilder = MemInfoBuilder{}.
+	WithMode(MemFilemodeDefault).
+	WithTimeProvider(TimeProviderUnixEpoch)
 
 func (m MemInfoBuilder) WithMode(mode fs.FileMode) MemInfoBuilder {
 	m.mode = mode

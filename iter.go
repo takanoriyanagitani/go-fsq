@@ -46,3 +46,9 @@ func (i Iter[T]) Count() int {
 		return state + 1
 	})
 }
+
+func (i Iter[T]) ToArray() []T {
+	return IterReduce(i, nil, func(state []T, t T) []T { return append(state, t) })
+}
+
+func (i Iter[T]) ToArrayIter() Iter[T] { return IterFromArr(i.ToArray()) }
