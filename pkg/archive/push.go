@@ -15,7 +15,7 @@ type NameChecker func(unchecked string) (checked string)
 
 type PushmanyBuilder func(NameChecker) fq.PushMany
 
-func (p PushMany) NewBuilder(tmp TempnameBuilder) PushmanyBuilder {
+func (p PushMany) newBuilder(tmp TempnameBuilder) PushmanyBuilder {
 	return func(chk NameChecker) fq.PushMany {
 		return func(ctx context.Context, filename string, items fq.Iter[fq.Item]) error {
 			tmpname := tmp(filename)
@@ -39,7 +39,8 @@ func (p PushMany) NewBuilder(tmp TempnameBuilder) PushmanyBuilder {
 	}
 }
 
-func (p PushMany) BuildSimple(chk NameChecker) fq.PushMany {
-	var bldr PushmanyBuilder = p.NewBuilder(TempnameBuilderSimple)
-	return bldr(chk)
+func PushmanyBuilderNew(b TempnameBuilder) func(PushMany) PushmanyBuilder {
+	return func(p PushMany) PushmanyBuilder { return p.newBuilder(b) }
 }
+
+var PushmanyBuilderSimple func(PushMany) PushmanyBuilder = PushmanyBuilderNew(TempnameBuilderSimple)
