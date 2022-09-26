@@ -34,3 +34,9 @@ func (i Iter[T]) All(f func(T) bool) bool {
 		return state && f(t)
 	})
 }
+
+func IterEmpty[T any]() Iter[T] {
+	return func() (t T, hasValue bool) {
+		return t, OptEmpty
+	}
+}

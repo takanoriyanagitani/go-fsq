@@ -25,7 +25,7 @@ func ErrOnly[T, U any](f func(T) (U, error)) func(T) error {
 	}
 }
 
-func ErrFromBool[T any](ok bool, okf func() T, ngf func() error)(t T, e error){
+func ErrFromBool[T any](ok bool, okf func() T, ngf func() error) (t T, e error) {
 	if ok {
 		return okf(), nil
 	}
