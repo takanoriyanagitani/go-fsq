@@ -51,7 +51,7 @@ func (f PushmanyFactory) Build() (fq.PushMany, error) {
 		valid,
 		func() fq.PushMany {
 			return fq.Compose(
-				func(p PushMany) PushmanyBuilder { return p.newBuilder(f.TempnameBuilder) },
+				PushmanyBuilderNew(f.TempnameBuilder),
 				func(b PushmanyBuilder) fq.PushMany { return b(f.NameChecker) },
 			)(f.PushMany)
 		},
