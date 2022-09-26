@@ -21,6 +21,16 @@ func (p PushMany) Build() aq.PushMany {
 	}
 }
 
+func (p PushMany) ToPushMany(f aq.PushmanyFactory) (fq.PushMany, error) {
+	return f.
+		WithPushMany(p.Build()).
+		Build()
+}
+
+func (p PushMany) ToPushManyDefault() (fq.PushMany, error) {
+	return p.ToPushMany(aq.PushmanyFactory{}.Default())
+}
+
 func (p PushMany) NewBuilder(tb aq.TempnameBuilder) aq.PushmanyBuilder {
 	return fq.Compose(
 		func(pm PushMany) aq.PushMany { return pm.Build() },
