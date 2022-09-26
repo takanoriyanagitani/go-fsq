@@ -28,6 +28,8 @@ func (t item2tar) pushMany(ctx context.Context, tw *tar.Writer, items fq.Iter[fq
 	return items.TryForEach(wt)
 }
 
+func (t item2tar) toPushMany() PushMany { return t.pushMany }
+
 type item struct {
 	raw []byte
 	hdr *tar.Header

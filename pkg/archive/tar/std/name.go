@@ -35,9 +35,18 @@ func (g NameGen) toNamedItem(i fq.Item) (namedItem, error) {
 	)(i)
 }
 
+func (g NameGen) toNamedItemGen() namedItemGen { return g.toNamedItem }
+
+func (g NameGen) toHeaderGenBuilder() headerGenBuilder {
+	return g.toNamedItemGen().toHeaderGenBuilder()
+}
+
+func (g NameGen) toHeaderGen(mode int64) headerGen { return g.toHeaderGenBuilder()(mode) }
+func (g NameGen) toHeaderGenDefault() headerGen    { return g.toHeaderGenBuilder().toDefault() }
+
 type namedItemGen func(fq.Item) (namedItem, error)
 
-func (gen namedItemGen) newBuilder() headerGenBuilder {
+func (gen namedItemGen) toHeaderGenBuilder() headerGenBuilder {
 	return func(mode int64) headerGen {
 		return fq.ComposeErr(
 			gen,
