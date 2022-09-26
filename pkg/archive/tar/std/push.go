@@ -60,3 +60,15 @@ func item2tarBuilderNew(gen headerGen) item2tar {
 		return fq.ErrOnly(i2t)
 	}
 }
+
+type PushmanyBuilder func(mode int64) PushMany
+
+func PushmanyBuilderNew(g NameGen) PushmanyBuilder {
+	return func(mode int64) PushMany {
+		return g.toPushMany(mode)
+	}
+}
+
+var PushmanyBuilderUuidV4 PushmanyBuilder = PushmanyBuilderNew(NameGenUuidV4)
+
+var PushmanyUuidV4Default PushMany = PushmanyBuilderUuidV4(FilemodeDefault)
