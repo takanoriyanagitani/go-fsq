@@ -40,3 +40,9 @@ func IterEmpty[T any]() Iter[T] {
 		return t, OptEmpty
 	}
 }
+
+func (i Iter[T]) Count() int {
+	return IterReduce(i, 0, func(state int, _ T) int {
+		return state + 1
+	})
+}
