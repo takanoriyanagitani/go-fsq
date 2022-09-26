@@ -3,6 +3,7 @@ package aq
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"io"
 	"os"
 
@@ -13,7 +14,54 @@ type PushMany func(ctx context.Context, w io.Writer, items fq.Iter[fq.Item]) err
 
 type NameChecker func(unchecked string) (checked string)
 
+var NameCheckerNoCheck NameChecker = fq.Identity[string]
+
 type PushmanyBuilder func(NameChecker) fq.PushMany
+
+type PushmanyFactory struct {
+	PushMany
+	TempnameBuilder
+	NameChecker
+}
+
+func (f PushmanyFactory) Default() PushmanyFactory {
+	return f.
+		WithTempnameBuilder(TempnameBuilderSimple).
+		WithNameChecker(NameCheckerNoCheck)
+}
+
+func (f PushmanyFactory) WithPushMany(p PushMany) PushmanyFactory {
+	f.PushMany = p
+	return f
+}
+
+func (f PushmanyFactory) WithTempnameBuilder(t TempnameBuilder) PushmanyFactory {
+	f.TempnameBuilder = t
+	return f
+}
+
+func (f PushmanyFactory) WithNameChecker(c NameChecker) PushmanyFactory {
+	f.NameChecker = c
+	return f
+}
+
+func (f PushmanyFactory) Build() (fq.PushMany, error) {
+	var valid bool = fq.IterFromArr([]bool{
+		nil != f.PushMany,
+		nil != f.TempnameBuilder,
+		nil != f.NameChecker,
+	}).All(fq.Identity[bool])
+	return fq.ErrFromBool(
+		valid,
+		func() fq.PushMany {
+			return fq.Compose(
+				func(p PushMany) PushmanyBuilder { return p.newBuilder(f.TempnameBuilder) },
+				func(b PushmanyBuilder) fq.PushMany { return b(f.NameChecker) },
+			)(f.PushMany)
+		},
+		func() error { return fmt.Errorf("Invalid builder") },
+	)
+}
 
 func (p PushMany) newBuilder(tmp TempnameBuilder) PushmanyBuilder {
 	return func(chk NameChecker) fq.PushMany {

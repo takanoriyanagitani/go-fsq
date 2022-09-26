@@ -28,3 +28,9 @@ func (i Iter[T]) TryForEach(f func(T) error) error {
 		return ErrOrElse(state, func() error { return f(t) })
 	})
 }
+
+func (i Iter[T]) All(f func(T) bool) bool {
+	return IterReduce(i, true, func(state bool, t T) bool {
+		return state && f(t)
+	})
+}

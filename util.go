@@ -13,3 +13,5 @@ func IgnoreArg[T, U any](f func() (U, error)) func(T) (U, error) {
 		return f()
 	}
 }
+
+func Identity[T any](t T) T { return t }

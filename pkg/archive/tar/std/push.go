@@ -21,6 +21,13 @@ func (p PushMany) Build() aq.PushMany {
 	}
 }
 
+func (p PushMany) NewBuilder(tb aq.TempnameBuilder) aq.PushmanyBuilder {
+	return fq.Compose(
+		func(pm PushMany) aq.PushMany { return pm.Build() },
+		aq.PushmanyBuilderNew(tb),
+	)(p)
+}
+
 type item2tar func(t *tar.Writer) func(fq.Item) error
 
 func (t item2tar) pushMany(ctx context.Context, tw *tar.Writer, items fq.Iter[fq.Item]) error {
