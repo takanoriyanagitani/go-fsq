@@ -7,3 +7,9 @@ func Curry[T, U, V any](f func(T, U) V) func(T) func(U) V {
 		}
 	}
 }
+
+func IgnoreArg[T, U any](f func() (U, error)) func(T) (U, error) {
+	return func(_ T) (U, error) {
+		return f()
+	}
+}

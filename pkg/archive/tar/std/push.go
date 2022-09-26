@@ -35,22 +35,22 @@ type item struct {
 
 func (i item) toWriter(w *tar.Writer) (int, error) {
 	return fq.ComposeErr(
-		func(tw *tar.Writer) (*tar.Writer, error) { return tw, tw.WriteHeader(i.hdr) },
-		func(tw *tar.Writer) (int, error) { return tw.Write(i.raw) },
-	)(w)
+		func(hdr *tar.Header) ([]byte, error) { return i.raw, w.WriteHeader(hdr) },
+		w.Write,
+	)(i.hdr)
 }
 
 func writeItemBuilder(tw *tar.Writer, i fq.Item) func(*tar.Header) (int, error) {
 	return fq.ComposeErr(
-		func(hdr *tar.Header) (*tar.Writer, error) { return tw, tw.WriteHeader(hdr) },
-		func(w *tar.Writer) (int, error) { return w.Write(i.Raw()) },
+		func(hdr *tar.Header) ([]byte, error) { return i.Raw(), tw.WriteHeader(hdr) },
+		tw.Write,
 	)
 }
 
 func item2tarBuilderNew(gen headerGen) item2tar {
 	var toItem func(fq.Item) (item, error) = gen.toItem
 	return func(t *tar.Writer) func(fq.Item) error {
-		var writeItem func(item) (int, error) = func(i item) (int, error) { return i.toWriter(t) }
+		writeItem := func(i item) (int, error) { return i.toWriter(t) }
 		var i2t func(fq.Item) (int, error) = fq.ComposeErr(
 			toItem,
 			writeItem,
