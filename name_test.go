@@ -18,17 +18,21 @@ func TestName(t *testing.T) {
 
 	var root string = filepath.Join(ITEST_FSQ_DIRNAME, "name")
 
+	getDirSize := func(dirname string) int64 {
+		f, e := os.Open(dirname)
+		mustNil(e)
+		defer f.Close()
+		s, e := f.Stat()
+		mustNil(e)
+		return s.Size()
+	}
+
 	getMinDirSize := func(dirname string) int64 {
 		e := os.RemoveAll(dirname)
 		mustNil(e)
 		e = os.MkdirAll(dirname, 0755)
 		mustNil(e)
-		df, e := os.Open(dirname)
-		mustNil(e)
-		defer df.Close()
-		stat, e := df.Stat()
-		mustNil(e)
-		var sz int64 = stat.Size()
+		var sz int64 = getDirSize(dirname)
 		e = os.RemoveAll(dirname)
 		mustNil(e)
 		return sz
@@ -78,7 +82,7 @@ func TestName(t *testing.T) {
 				t.Run("next queue name got", checkErr(e))
 				t.Run("Must be same", check(next, filepath.Join(dirname, "0123456789abcdf0")))
 
-				var ints Iter[int] = IterInts(0, 16)
+				var ints Iter[int] = IterInts(0, 128)
 				e = ints.TryForEach(func(i int) error {
 					var name string = filepath.Join(dirname, fmt.Sprintf("%04x.dat", i))
 					f, e := os.Create(name)
@@ -87,8 +91,13 @@ func TestName(t *testing.T) {
 				})
 				t.Run("empty files created", checkErr(e))
 
+				var dirsize int64 = getDirSize(dirname)
 				_, e = fg(context.Background())
-				t.Run("Must fail", check(nil != e, true))
+				t.Run("Must fail", func(t *testing.T) {
+					if nil == e {
+						t.Fatalf("Must fail. min dirsize: %v, dirsize: %v", minDirSize, dirsize)
+					}
+				})
 			})
 		})
 
