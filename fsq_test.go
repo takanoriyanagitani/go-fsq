@@ -33,3 +33,9 @@ func checkErr(e error) func(*testing.T) {
 		}
 	}
 }
+
+func mustNil(e error) {
+	if nil != e {
+		panic(e)
+	}
+}

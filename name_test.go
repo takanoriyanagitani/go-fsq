@@ -17,6 +17,24 @@ func TestName(t *testing.T) {
 
 	var root string = filepath.Join(ITEST_FSQ_DIRNAME, "name")
 
+	getMinDirSize := func(dirname string) int64 {
+		e := os.RemoveAll(dirname)
+		mustNil(e)
+		e = os.MkdirAll(dirname, 0755)
+		mustNil(e)
+		df, e := os.Open(dirname)
+		mustNil(e)
+		defer df.Close()
+		stat, e := df.Stat()
+		mustNil(e)
+		var sz int64 = stat.Size()
+		e = os.RemoveAll(dirname)
+		mustNil(e)
+		return sz
+	}
+
+	var minDirSize int64 = getMinDirSize(filepath.Join(root, "getMinDirSize.d"))
+
 	t.Run("QueueDirStatCheckerNewBySize", func(t *testing.T) {
 		t.Parallel()
 
@@ -40,10 +58,10 @@ func TestName(t *testing.T) {
 			fb, e := QueueFilenameBuilderNew(q1st, nq)
 			t.Run("builder got", check(nil == e, true))
 
-			t.Run("zero checker", func(t *testing.T) {
+			t.Run("sz minimum checker", func(t *testing.T) {
 				t.Parallel()
 
-				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(0)
+				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(minDirSize)
 				var dc QueueDirChecker = QueueDirCheckerNewStat(sc)
 				var fg QueueFilenameGenerator = fb.
 					ToGenerator().
@@ -103,10 +121,10 @@ func TestName(t *testing.T) {
 			fb, e := QueueFilenameBuilderNew(q1st, nq)
 			t.Run("builder got", check(nil == e, true))
 
-			t.Run("zero checker", func(t *testing.T) {
+			t.Run("sz minimum checker", func(t *testing.T) {
 				t.Parallel()
 
-				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(0)
+				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(minDirSize)
 				var dc QueueDirChecker = QueueDirCheckerNewStat(sc)
 				var fg QueueFilenameGenerator = fb.
 					ToGenerator().
