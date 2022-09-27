@@ -41,3 +41,10 @@ func ErrUnwrapOrElse[T, U any](f func(T) (U, error), g func(error) U) func(T) U 
 		return u
 	}
 }
+
+func ErrTryForEach[T any](t T, e error, f func(T) error) error {
+	if nil != e {
+		return e
+	}
+	return f(t)
+}
