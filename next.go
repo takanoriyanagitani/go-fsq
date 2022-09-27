@@ -45,8 +45,9 @@ var fsDefault fs.FS = openerNewOrDefault(nil)
 // NextCheckBuilder creates NextCheck.
 // If "next" file exists, it returns fs.ErrExist
 func NextCheckBuilder(f fs.FS) NextCheck {
+	var _f fs.FS = openerNewOrDefault(f)
 	return func(next string) (checked string, err error) {
-		file, e := f.Open(next)
+		file, e := _f.Open(next)
 		if nil == e {
 			_ = file.Close()
 			return "", fs.ErrExist

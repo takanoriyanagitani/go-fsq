@@ -71,3 +71,19 @@ func (i Iter[T]) Filter(f func(T) (ok bool)) Iter[T] {
 		),
 	)(i)
 }
+
+func (i Iter[T]) Reduce(init T, reducer func(state T, item T) T) T {
+	return IterReduce(i, init, reducer)
+}
+
+func IterInts(lbi, ube int) Iter[int] {
+	var ix int = lbi
+	return func() (i int, hasValue bool) {
+		if ix < ube {
+			var nx int = ix
+			ix += 1
+			return nx, OptHasValue
+		}
+		return -1, OptEmpty
+	}
+}
