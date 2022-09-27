@@ -78,5 +78,43 @@ func TestName(t *testing.T) {
 			t.Run("Must fail", check(nil != e, true))
 		})
 
+		t.Run("queue already exists", func(t *testing.T) {
+			t.Parallel()
+
+			var dirname string = filepath.Join(root, "QueueDirStatCheckerNewBySize/q-exists")
+			e := os.RemoveAll(dirname)
+			t.Run("test dir dropped", checkErr(e))
+
+			e = os.MkdirAll(dirname, 0755)
+			t.Run("test dir created", checkErr(e))
+
+			var op opener = openerNewOrDefault(fsDefault)
+			var nc NextCheck = NextCheckBuilder(op)
+			var nq NextQueue = NextQueueI64.
+				WithoutDir().
+				ToChecked(nc)
+			var q1st string = filepath.Join(dirname, "0123456789abcdef")
+			var qnex string = filepath.Join(dirname, "0123456789abcdf0")
+
+			f, e := os.Create(qnex)
+			t.Run("next queue file created", checkErr(e))
+			_ = f.Close()
+
+			fb, e := QueueFilenameBuilderNew(q1st, nq)
+			t.Run("builder got", check(nil == e, true))
+
+			t.Run("zero checker", func(t *testing.T) {
+				t.Parallel()
+
+				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(0)
+				var dc QueueDirChecker = QueueDirCheckerNewStat(sc)
+				var fg QueueFilenameGenerator = fb.
+					ToGenerator().
+					ToChecked(dc)
+
+				_, e := fg(context.Background())
+				t.Run("Must fail", check(nil != e, true))
+			})
+		})
 	})
 }
