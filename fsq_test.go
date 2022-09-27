@@ -25,3 +25,11 @@ func check[T comparable](got, expected T) func(*testing.T) {
 var checkBytes func(got, expected []byte) func(*testing.T) = checkBuilder(
 	func(a, b []byte) (same bool) { return 0 == bytes.Compare(a, b) },
 )
+
+func checkErr(e error) func(*testing.T) {
+	return func(t *testing.T) {
+		if nil != e {
+			t.Fatalf("Unexpected error: %v", e)
+		}
+	}
+}
