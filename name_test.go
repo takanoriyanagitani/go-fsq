@@ -30,7 +30,8 @@ func TestName(t *testing.T) {
 			e = os.MkdirAll(dirname, 0755)
 			t.Run("test dir created", checkErr(e))
 
-			var nc NextCheck = NextCheckBuilder(fsDefault)
+			var op opener = openerNewOrDefault(fsDefault)
+			var nc NextCheck = NextCheckBuilder(op)
 			var nq NextQueue = NextQueueI64.
 				WithoutDir().
 				ToChecked(nc)
