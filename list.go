@@ -9,6 +9,19 @@ import (
 
 type ListFilter func(fullpath string) (ok bool)
 
+func ListFilterBuilderExt(ext string) ListFilter {
+	return func(fullpath string) (ok bool) {
+		return ext == filepath.Ext(fullpath)
+	}
+}
+
+func (f ListFilter) Negate() ListFilter {
+	return func(fullpath string) (ok bool) {
+		var ng bool = f(fullpath)
+		return !ng
+	}
+}
+
 type ListQueue func(ctx context.Context, limit int) (filenames Iter[string], e error)
 
 func (l ListQueue) ToFiltered(f ListFilter) ListQueue {
