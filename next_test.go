@@ -90,7 +90,7 @@ func TestNext(t *testing.T) {
 				t.Run("qfile created", check(nil == e, true))
 				f.Close()
 
-				_, e := nq(context.Background(), pfilename)
+				_, e = nq(context.Background(), pfilename)
 				t.Run("Must fail", check(nil != e, true))
 			})
 		})
