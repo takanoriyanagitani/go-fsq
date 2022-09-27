@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"strconv"
 )
 
@@ -41,6 +42,15 @@ func (n NextQueue) ToChecked(checker NextCheck) NextQueue {
 		func(ctx context.Context, prev string) (next string, err error) { return n(ctx, prev) },
 		func(ctx context.Context, next string) (string, error) { return checker(next) },
 	)
+}
+
+func (n NextQueue) WithoutDir() NextQueue {
+	return func(ctx context.Context, previous string) (next string, err error) {
+		var basename string = filepath.Base(previous)
+		var dirname string = filepath.Dir(previous)
+		next, e := n(ctx, basename)
+		return filepath.Join(dirname, next), e
+	}
 }
 
 var NextQueueI64 NextQueue = ComposeContext(
