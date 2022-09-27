@@ -58,10 +58,10 @@ func TestName(t *testing.T) {
 			fb, e := QueueFilenameBuilderNew(q1st, nq)
 			t.Run("builder got", check(nil == e, true))
 
-			t.Run("sz minimum checker", func(t *testing.T) {
+			t.Run("zero checker", func(t *testing.T) {
 				t.Parallel()
 
-				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(minDirSize)
+				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(0)
 				var dc QueueDirChecker = QueueDirCheckerNewStat(sc)
 				var fg QueueFilenameGenerator = fb.
 					ToGenerator().
