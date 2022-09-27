@@ -2,6 +2,7 @@ package fsq
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -58,10 +59,16 @@ func TestName(t *testing.T) {
 			fb, e := QueueFilenameBuilderNew(q1st, nq)
 			t.Run("builder got", check(nil == e, true))
 
-			t.Run("zero checker", func(t *testing.T) {
+			t.Run("sz minimum checker", func(t *testing.T) {
 				t.Parallel()
 
-				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(0)
+				// - file system 1(github)
+				//   - empty dir size: 4096
+				//   - dir size after empty file creation = 4096
+				// - file system 2(local btrfs)
+				//   - empty dir size: 0
+				//   - dir size after empty file creation > 0
+				var sc QueueDirStatChecker = QueueDirStatCheckerNewBySize(minDirSize)
 				var dc QueueDirChecker = QueueDirCheckerNewStat(sc)
 				var fg QueueFilenameGenerator = fb.
 					ToGenerator().
@@ -71,9 +78,14 @@ func TestName(t *testing.T) {
 				t.Run("next queue name got", checkErr(e))
 				t.Run("Must be same", check(next, filepath.Join(dirname, "0123456789abcdf0")))
 
-				f, e := os.Create(filepath.Join(dirname, "empty.dat"))
-				t.Run("empty file created", checkErr(e))
-				_ = f.Close()
+				var ints Iter[int] = IterInts(0, 16)
+				e = ints.TryForEach(func(i int) error {
+					var name string = filepath.Join(dirname, fmt.Sprintf("%04x.dat", i))
+					f, e := os.Create(name)
+					mustNil(e)
+					return f.Close()
+				})
+				t.Run("empty files created", checkErr(e))
 
 				_, e = fg(context.Background())
 				t.Run("Must fail", check(nil != e, true))
