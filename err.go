@@ -31,3 +31,13 @@ func ErrFromBool[T any](ok bool, okf func() T, ngf func() error) (t T, e error) 
 	}
 	return t, ngf()
 }
+
+func ErrUnwrapOrElse[T, U any](f func(T) (U, error), g func(error) U) func(T) U {
+	return func(t T) U {
+		u, e := f(t)
+		if nil != e {
+			return g(e)
+		}
+		return u
+	}
+}
