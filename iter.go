@@ -52,3 +52,22 @@ func (i Iter[T]) ToArray() []T {
 }
 
 func (i Iter[T]) ToArrayIter() Iter[T] { return IterFromArr(i.ToArray()) }
+
+func IterMap[T, U any](i Iter[T], f func(T) U) Iter[U] {
+	return func() (u U, hasValue bool) {
+		t, hasValue := i()
+		return OptMap(t, hasValue, f)
+	}
+}
+
+// Filter creates filtered Iter from filtered array.
+func (i Iter[T]) Filter(f func(T) (ok bool)) Iter[T] {
+	var a2a func([]T) []T = Curry(ArrayFilter[T])(f)
+	return Compose(
+		func(_ Iter[T]) []T { return i.ToArray() },
+		Compose(
+			a2a,
+			IterFromArr[T],
+		),
+	)(i)
+}
