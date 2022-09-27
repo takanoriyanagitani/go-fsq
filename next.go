@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strconv"
 )
@@ -12,6 +13,34 @@ import (
 type NextQueue func(ctx context.Context, previous string) (next string, err error)
 
 type NextCheck func(next string) (checked string, err error)
+
+type opener func(name string) (fs.File, error)
+
+func (o opener) Open(name string) (fs.File, error) { return o(name) }
+
+var openerDefault opener = ComposeErr(
+	os.Open, // string -> *os.File, error
+	func(f *os.File) (fs.File, error) { return f, nil },
+)
+
+func openerNew(f fs.FS) (opener, error) {
+	return ErrFromBool(
+		nil != f,
+		func() opener { return f.Open },
+		func() error { return fmt.Errorf("Invalid filesystem") },
+	)
+}
+
+func openerNewOr(alt opener, f fs.FS) opener {
+	return ErrUnwrapOrElse(
+		openerNew,
+		func(_ error) opener { return alt },
+	)(f)
+}
+
+var openerNewOrDefault func(fs.FS) opener = Curry(openerNewOr)(openerDefault)
+
+var fsDefault fs.FS = openerNewOrDefault(nil)
 
 // NextCheckBuilder creates NextCheck.
 // If "next" file exists, it returns fs.ErrExist

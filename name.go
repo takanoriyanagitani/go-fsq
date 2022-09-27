@@ -5,11 +5,27 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 )
 
 type QueueFilenameGenerator func(context.Context) (next string, err error)
 
 type QueueDirChecker func(ctx context.Context, dirname string) (string, error)
+
+func (g QueueFilenameGenerator) ToChecked(checker QueueDirChecker) QueueFilenameGenerator {
+	return func(ctx context.Context) (next string, err error) {
+		return ComposeErr(
+			g, // context.Context -> string, error
+			func(filename string) (checked string, err error) {
+				var dirname string = filepath.Dir(filename)
+				return ComposeContext(
+					checker, // context.Context, string -> string, error
+					func(_c context.Context, _s string) (string, error) { return filename, nil },
+				)(ctx, dirname)
+			},
+		)(ctx)
+	}
+}
 
 type QueueDirStatChecker func(stat fs.FileInfo) (fs.FileInfo, error)
 
@@ -41,11 +57,17 @@ type QueueFilenameBuilder struct {
 	next NextQueue
 }
 
-func QueueFilenameBuilderNew(init string, next NextQueue) QueueFilenameBuilder {
-	return QueueFilenameBuilder{
-		prev: init,
-		next: next,
-	}
+func QueueFilenameBuilderNew(init string, next NextQueue) (QueueFilenameBuilder, error) {
+	return ErrFromBool(
+		nil != next,
+		func() QueueFilenameBuilder {
+			return QueueFilenameBuilder{
+				prev: init,
+				next: next,
+			}
+		},
+		func() error { return fmt.Errorf("Invalid NextQueue") },
+	)
 }
 
 func (b *QueueFilenameBuilder) Next(ctx context.Context) (next string, err error) {

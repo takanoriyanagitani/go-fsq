@@ -8,10 +8,6 @@ import (
 	"testing"
 )
 
-type opener func(string) (fs.File, error)
-
-func (o opener) Open(name string) (fs.File, error) { return o(name) }
-
 func TestNext(t *testing.T) {
 	t.Parallel()
 
