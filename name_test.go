@@ -82,7 +82,7 @@ func TestName(t *testing.T) {
 				t.Run("next queue name got", checkErr(e))
 				t.Run("Must be same", check(next, filepath.Join(dirname, "0123456789abcdf0")))
 
-				var ints Iter[int] = IterInts(0, 128)
+				var ints Iter[int] = IterInts(0, 1024)
 				e = ints.TryForEach(func(i int) error {
 					var name string = filepath.Join(dirname, fmt.Sprintf("%04x.dat", i))
 					f, e := os.Create(name)
