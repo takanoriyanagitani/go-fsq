@@ -2,11 +2,32 @@ package fsq
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/fs"
 	"strconv"
 )
 
 type NextQueue func(ctx context.Context, previous string) (next string, err error)
+
+type NextCheck func(next string) (checked string, err error)
+
+// NextCheckBuilder creates NextCheck.
+// If "next" file exists, it returns fs.ErrExist
+func NextCheckBuilder(f fs.FS) NextCheck {
+	return func(next string) (checked string, err error) {
+		file, e := f.Open(next)
+		if nil == e {
+			_ = file.Close()
+			return "", fs.ErrExist
+		}
+		return ErrFromBool(
+			errors.Is(e, fs.ErrNotExist),
+			func() string { return next },
+			func() error { return fmt.Errorf("Unexpected error: %v", e) },
+		)
+	}
+}
 
 func (n NextQueue) UnwrapOrElse(ctx context.Context, prev string, alt func() string) (next string) {
 	return ErrUnwrapOrElse(
@@ -15,10 +36,10 @@ func (n NextQueue) UnwrapOrElse(ctx context.Context, prev string, alt func() str
 	)(prev)
 }
 
-func (n NextQueue) ToChecked(checker func(next string) error) NextQueue {
+func (n NextQueue) ToChecked(checker NextCheck) NextQueue {
 	return ComposeContext(
 		func(ctx context.Context, prev string) (next string, err error) { return n(ctx, prev) },
-		func(ctx context.Context, next string) (string, error) { return next, checker(next) },
+		func(ctx context.Context, next string) (string, error) { return checker(next) },
 	)
 }
 
