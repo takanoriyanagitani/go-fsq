@@ -129,9 +129,10 @@ func BenchmarkPush(b *testing.B) {
 						}
 					}
 
-					b.Run("multi 10", newMulti(100*time.Millisecond, 10))
+					b.Run("multi x10", newMulti(100*time.Millisecond, 10))
 					b.Run("multi 16", newMulti(100*time.Millisecond, 16))
 					b.Run("multi 128", newMulti(100*time.Millisecond, 128))
+					b.Run("multi c100", newMulti(1000*time.Millisecond, 100))
 				}
 			}(push))
 

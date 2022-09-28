@@ -2,6 +2,8 @@ package aq
 
 import (
 	"bufio"
+	"syscall"
+	"path/filepath"
 	"context"
 	"fmt"
 	"io"
@@ -59,8 +61,32 @@ func (f PushmanyFactory) Build() (fq.PushMany, error) {
 	)
 }
 
+func syncDirNew(chk NameChecker) func(dirname string) error {
+	return func(dirname string) error {
+		f, e := os.Open(chk(dirname))
+		if nil != e {
+			return e
+		}
+		defer func() {
+			_ = f.Close() // ignore close error after dir sync
+		}()
+		return f.Sync()
+	}
+}
+
+func fdatasync(f *os.File) error {
+	var fd uintptr = f.Fd()
+	var ifd int = int(fd)
+	return syscall.Fdatasync(ifd)
+}
+
 func (p PushMany) newBuilder(tmp TempnameBuilder) PushmanyBuilder {
 	return func(chk NameChecker) fq.PushMany {
+		dirSyncNew := func(dirname string) func() error {
+			return func() error {
+				return syncDirNew(chk)(dirname)
+			}
+		}
 		return func(ctx context.Context, filename string, items fq.Iter[fq.Item]) error {
 			tmpname := tmp(filename)
 			f, e := os.Create(chk(tmpname))
@@ -76,8 +102,9 @@ func (p PushMany) newBuilder(tmp TempnameBuilder) PushmanyBuilder {
 			return fq.Err1st([]func() error{
 				func() error { return p(ctx, bw, items) },
 				func() error { return bw.Flush() },
-				func() error { return f.Sync() },
+				func() error { return fdatasync(f) },
 				func() error { return os.Rename(tmpname, filename) },
+				dirSyncNew(filepath.Dir(filename)),
 			})
 		}
 	}
